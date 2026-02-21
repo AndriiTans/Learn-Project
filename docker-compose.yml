@@ -1,0 +1,115 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=learn_project
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - learn-project-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=learn_project
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - learn-project-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  core-api:
+    build:
+      context: ./services/core-api
+      dockerfile: Dockerfile
+    container_name: core-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - learn-project-network
+
+  node-api:
+    build:
+      context: ./services/node-api
+      dockerfile: Dockerfile
+    container_name: node-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=learn_project
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=learn_project
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - learn-project-network
+
+  angular-frontend:
+    build:
+      context: ./services/angular-frontend
+      dockerfile: Dockerfile
+    container_name: angular-frontend
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - core-api
+    networks:
+      - learn-project-network
+
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_TARGET=http://core-api:8080
+    depends_on:
+      - core-api
+    networks:
+      - learn-project-network
+
+networks:
+  learn-project-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  mongodb-data:
+    driver: local

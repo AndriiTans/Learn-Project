@@ -1,0 +1,42 @@
+# Local development - databases only
+# Run: docker-compose -f docker-compose.local.yml up -d
+# This allows you to run node-api locally with npm run dev while using containerized databases
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-local
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=learn_project
+    volumes:
+      - postgres-local-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mongodb-local
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=learn_project
+    volumes:
+      - mongodb-local-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-local-data:
+    driver: local
+  mongodb-local-data:
+    driver: local
