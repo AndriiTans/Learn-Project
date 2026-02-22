@@ -104,6 +104,36 @@ services:
     networks:
       - learn-project-network
 
+  backoffice:
+    build:
+      context: ./services/backoffice
+      dockerfile: Dockerfile
+    container_name: backoffice
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - COGNITO_REGION=${COGNITO_REGION:-eu-central-1}
+      - COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID:-}
+      - COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID:-}
+      - COGNITO_ISSUER=${COGNITO_ISSUER:-}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=learn_project
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=learn_project
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - learn-project-network
+
 networks:
   learn-project-network:
     driver: bridge

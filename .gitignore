@@ -61,3 +61,5 @@ dist/
 # Database data (if running locally)
 postgres-data/
 mongodb-data/
+
+.fake
