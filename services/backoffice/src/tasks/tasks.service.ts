@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TaskEntity } from './entities/task.entity';
 import { TaskEntityType } from './enums/task-entity-type.enum';
 import { TaskStatus } from './enums/task-status.enum';
@@ -14,7 +14,7 @@ export class TasksService {
   constructor(
     @InjectRepository(TaskEntity)
     private readonly tasksRepository: Repository<TaskEntity>,
-  ) {}
+  ) { }
 
   async createTask(
     shiftId: string,
@@ -145,6 +145,8 @@ export class TasksService {
     const where: any = { workerId };
     if (status) {
       where.status = status;
+    } else {
+      where.status = In([TaskStatus.PENDING, TaskStatus.ASSIGNED, TaskStatus.IN_PROGRESS]);
     }
 
     return this.tasksRepository.find({
@@ -159,5 +161,21 @@ export class TasksService {
       where: { shiftId },
       order: { priority: 'DESC', createdAt: 'ASC' },
     });
+  }
+
+  async approveTask(
+    taskId: string,
+    workerId: string,
+    comment?: string,
+  ): Promise<TaskEntity> {
+    return this.completeTask(taskId, workerId, comment);
+  }
+
+  async disapproveTask(
+    taskId: string,
+    workerId: string,
+    comment?: string,
+  ): Promise<TaskEntity> {
+    return this.failTask(taskId, workerId, comment);
   }
 }

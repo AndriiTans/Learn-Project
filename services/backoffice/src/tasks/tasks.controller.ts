@@ -67,6 +67,26 @@ export class TasksController {
     return this.tasksService.failTask(id, userId, dto.comment);
   }
 
+  @Put(':id/approve')
+  async approveTask(
+    @Param('id') id: string,
+    @CurrentUser() user: JWTPayload,
+    @Body() dto: CompleteTaskDto,
+  ) {
+    const userId = user.sub as string;
+    return this.tasksService.approveTask(id, userId, dto.comment);
+  }
+
+  @Put(':id/disapprove')
+  async disapproveTask(
+    @Param('id') id: string,
+    @CurrentUser() user: JWTPayload,
+    @Body() dto: CompleteTaskDto,
+  ) {
+    const userId = user.sub as string;
+    return this.tasksService.disapproveTask(id, userId, dto.comment);
+  }
+
   @Get('my')
   async getMyTasks(
     @CurrentUser() user: JWTPayload,
