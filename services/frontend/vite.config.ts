@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'styled-components': path.resolve(__dirname, './src/stub-styled-components.ts'),
+      'styled-components/theme': path.resolve(__dirname, './src/stub-styled-components-theme.ts'),
     },
   },
   server: {
